@@ -36,6 +36,11 @@ const routes = [
                 name: 'dashboard',
                 component: () => import('../views/dashboard/Home.vue'),
             },
+            {
+                path: 'migrations',
+                name: 'migrations',
+                component: () => import('../views/dashboard/Migrations.vue'),
+            },
         ],
     },
 ];

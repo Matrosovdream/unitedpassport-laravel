@@ -16,6 +16,13 @@ const model = ref([
             { label: 'Users', icon: 'pi pi-fw pi-users', to: '/dashboard/users' },
             { label: 'Settings', icon: 'pi pi-fw pi-cog', to: '/dashboard/settings' }
         ]
+    },
+    {
+        label: 'System',
+        path: '/system',
+        items: [
+            { label: 'Migrations', icon: 'pi pi-fw pi-database', to: '/dashboard/migrations' }
+        ]
     }
 ]);
 </script>
