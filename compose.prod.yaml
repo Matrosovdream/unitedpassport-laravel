@@ -1,0 +1,117 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: ./docker/production/nginx/Dockerfile
+    restart: unless-stopped
+    volumes:
+      - unitedpassport-storage-production:/var/www/storage:ro
+      - unitedpassport-public-assets:/var/www/public/build:ro
+    networks:
+      - unitedpassport-production
+    ports:
+      - "${NGINX_PORT:-9090}:80"
+    depends_on:
+      php-fpm:
+        condition: service_healthy
+
+  php-fpm:
+    build:
+      context: .
+      dockerfile: ./docker/common/php-fpm/Dockerfile
+      target: production
+    restart: unless-stopped
+    volumes:
+      - unitedpassport-public-assets:/var/www/public/build
+      - unitedpassport-storage-production:/var/www/storage
+    env_file:
+      - .env
+    networks:
+      - unitedpassport-production
+    healthcheck:
+      test: ["CMD-SHELL", "php-fpm-healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  queue-worker:
+    build:
+      context: .
+      dockerfile: ./docker/common/php-fpm/Dockerfile
+      target: production
+    restart: unless-stopped
+    volumes:
+      - unitedpassport-storage-production:/var/www/storage
+    env_file:
+      - .env
+    networks:
+      - unitedpassport-production
+    depends_on:
+      php-fpm:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    entrypoint: []
+    command: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3", "--timeout=90"]
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: ./docker/common/php-fpm/Dockerfile
+      target: production
+    restart: unless-stopped
+    volumes:
+      - unitedpassport-storage-production:/var/www/storage
+    env_file:
+      - .env
+    networks:
+      - unitedpassport-production
+    depends_on:
+      php-fpm:
+        condition: service_healthy
+    entrypoint: []
+    command: ["php", "artisan", "schedule:work"]
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    user: postgres
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_DB=${DB_DATABASE:-unitedpassport}
+      - POSTGRES_USER=${DB_USERNAME:-unitedpassport}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-secret}
+    volumes:
+      - postgres-data-production:/var/lib/postgresql/data
+    networks:
+      - unitedpassport-production
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    networks:
+      - unitedpassport-production
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  unitedpassport-production:
+
+volumes:
+  postgres-data-production:
+  unitedpassport-storage-production:
+  unitedpassport-public-assets:
