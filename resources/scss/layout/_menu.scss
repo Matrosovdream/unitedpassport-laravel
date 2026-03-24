@@ -1,0 +1,132 @@
+@use 'mixins';
+
+.layout-sidebar {
+    position: fixed;
+    width: 20rem;
+    height: calc(100vh - 6rem);
+    z-index: 996;
+    overflow-y: auto;
+    top: 6rem;
+    left: 0;
+    transition: transform var(--layout-section-transition-duration), left var(--layout-section-transition-duration);
+    background-color: var(--surface-card);
+    border-right: 1px solid var(--surface-border);
+    padding: 1rem 1.5rem;
+}
+
+.layout-menu {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+
+    .layout-root-menuitem {
+        > .layout-menuitem-root-text {
+            font-size: 0.857rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-color-secondary);
+            margin: 0.75rem 0 0.5rem 0;
+        }
+
+        > a {
+            display: none;
+        }
+    }
+
+    a {
+        user-select: none;
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        color: var(--text-color);
+        border-radius: var(--content-border-radius);
+        cursor: pointer;
+        transition: background var(--element-transition-duration), color var(--element-transition-duration);
+        text-decoration: none;
+
+        .layout-menuitem-icon {
+            margin-right: 0.5rem;
+        }
+
+        .layout-submenu-toggler {
+            margin-left: auto;
+        }
+
+        &.active-route {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        &:hover {
+            background: var(--surface-hover);
+        }
+
+        &:focus {
+            @include mixins.focused();
+        }
+    }
+
+    li {
+        &.active-menuitem {
+            > a {
+                .layout-submenu-toggler {
+                    transform: rotate(-180deg);
+                }
+            }
+        }
+    }
+
+    ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+
+        a {
+            padding-left: 2rem;
+        }
+
+        ul {
+            a {
+                padding-left: 3rem;
+            }
+
+            ul {
+                a {
+                    padding-left: 4rem;
+                }
+
+                ul {
+                    a {
+                        padding-left: 5rem;
+                    }
+
+                    ul {
+                        a {
+                            padding-left: 6rem;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.layout-submenu-enter-from,
+.layout-submenu-leave-to {
+    max-height: 0;
+}
+
+.layout-submenu-enter-to,
+.layout-submenu-leave-from {
+    max-height: 1000px;
+}
+
+.layout-submenu-leave-active {
+    overflow: hidden;
+    transition: max-height 0.45s cubic-bezier(0, 1, 0, 1);
+}
+
+.layout-submenu-enter-active {
+    overflow: hidden;
+    transition: max-height 1s ease-in-out;
+}
