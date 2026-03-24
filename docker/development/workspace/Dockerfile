@@ -2,7 +2,7 @@ FROM php:8.4-cli
 
 ARG UID=1000
 ARG GID=1000
-ARG NODE_VERSION=22.0.0
+ARG NODE_VERSION=22.14.0
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
