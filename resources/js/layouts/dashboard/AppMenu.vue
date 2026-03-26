@@ -24,6 +24,12 @@ const model = ref([
         ]
     },
     {
+        label: 'Payment',
+        items: [
+            { label: 'Mass Refund', icon: 'pi pi-fw pi-undo', to: '/dashboard/mass-refund' }
+        ]
+    },
+    {
         label: 'Labels',
         items: [
             { label: 'Shipping Labels', icon: 'pi pi-fw pi-tag', to: '/dashboard/labels' }

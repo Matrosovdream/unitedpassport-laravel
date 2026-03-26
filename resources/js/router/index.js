@@ -82,6 +82,11 @@ const routes = [
                 component: () => import('../views/dashboard/ShippingLabels.vue'),
             },
             {
+                path: 'mass-refund',
+                name: 'mass-refund',
+                component: () => import('../views/dashboard/MassRefund.vue'),
+            },
+            {
                 path: 'migrations',
                 name: 'migrations',
                 component: () => import('../views/dashboard/Migrations.vue'),
