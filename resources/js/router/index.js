@@ -24,6 +24,11 @@ const routes = [
                 component: () => import('../views/public/Register.vue'),
                 meta: { guest: true },
             },
+            {
+                path: 'apply',
+                name: 'apply',
+                component: () => import('../views/public/Apply.vue'),
+            },
         ],
     },
     {
