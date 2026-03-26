@@ -19,8 +19,6 @@ class LoginAction
             return response()->json(['message' => 'Invalid credentials.'], 401);
         }
 
-        $request->session()->regenerate();
-
         return response()->json(['user' => Auth::user()]);
     }
 }
