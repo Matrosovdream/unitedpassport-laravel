@@ -29,6 +29,11 @@ const routes = [
                 name: 'apply',
                 component: () => import('../views/public/Apply.vue'),
             },
+            {
+                path: 'apply/:formKey',
+                name: 'apply-form',
+                component: () => import('../views/public/Apply.vue'),
+            },
         ],
     },
     {
@@ -50,6 +55,16 @@ const routes = [
                 path: 'user-roles',
                 name: 'user-roles',
                 component: () => import('../views/dashboard/UserRoles.vue'),
+            },
+            {
+                path: 'forms',
+                name: 'forms',
+                component: () => import('../views/dashboard/Forms.vue'),
+            },
+            {
+                path: 'forms/:id',
+                name: 'form-edit',
+                component: () => import('../views/dashboard/FormEdit.vue'),
             },
             {
                 path: 'migrations',

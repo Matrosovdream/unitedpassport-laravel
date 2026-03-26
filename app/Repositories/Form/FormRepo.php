@@ -36,8 +36,15 @@ class FormRepo extends AbstractRepo
             'name' => $item->name,
             'description' => $item->description,
             'parent_form_id' => $item->parent_form_id,
-            'status' => $item->status,
+            'logged_in' => $item->logged_in,
+            'editable' => $item->editable,
             'is_template' => $item->is_template,
+            'default_template' => $item->default_template,
+            'status' => $item->status,
+            'options' => $item->options,
+            'fields_count' => $item->relationLoaded('fields') ? $item->fields->count() : 0,
+            'created_at' => $item->created_at,
+            'updated_at' => $item->updated_at,
             'Model' => $item,
         ];
     }
