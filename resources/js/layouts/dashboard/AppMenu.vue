@@ -10,17 +10,11 @@ const model = ref([
         ]
     },
     {
-        label: 'Users',
-        items: [
-            { label: 'Users', icon: 'pi pi-fw pi-users', to: '/dashboard/users' },
-            { label: 'User Roles', icon: 'pi pi-fw pi-shield', to: '/dashboard/user-roles' }
-        ]
-    },
-    {
         label: 'Forms',
         items: [
             { label: 'Forms', icon: 'pi pi-fw pi-file-edit', to: '/dashboard/forms' },
-            { label: 'Entries', icon: 'pi pi-fw pi-list', to: '/dashboard/entries' }
+            { label: 'Entries', icon: 'pi pi-fw pi-list', to: '/dashboard/entries' },
+            { label: 'AI Photos', icon: 'pi pi-fw pi-camera', to: '/dashboard/ai-photos' }
         ]
     },
     {
@@ -38,7 +32,9 @@ const model = ref([
     {
         label: 'Management',
         items: [
-            { label: 'Settings', icon: 'pi pi-fw pi-cog', to: '/dashboard/settings' }
+            { label: 'Settings', icon: 'pi pi-fw pi-cog', to: '/dashboard/settings' },
+            { label: 'Users', icon: 'pi pi-fw pi-users', to: '/dashboard/users' },
+            { label: 'User Roles', icon: 'pi pi-fw pi-shield', to: '/dashboard/user-roles' }
         ]
     },
     {

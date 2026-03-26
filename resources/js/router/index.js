@@ -87,6 +87,11 @@ const routes = [
                 component: () => import('../views/dashboard/MassRefund.vue'),
             },
             {
+                path: 'ai-photos',
+                name: 'ai-photos',
+                component: () => import('../views/dashboard/AiPhotos.vue'),
+            },
+            {
                 path: 'migrations',
                 name: 'migrations',
                 component: () => import('../views/dashboard/Migrations.vue'),
