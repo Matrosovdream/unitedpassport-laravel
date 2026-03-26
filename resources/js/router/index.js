@@ -37,6 +37,16 @@ const routes = [
                 component: () => import('../views/dashboard/Home.vue'),
             },
             {
+                path: 'users',
+                name: 'users',
+                component: () => import('../views/dashboard/Users.vue'),
+            },
+            {
+                path: 'user-roles',
+                name: 'user-roles',
+                component: () => import('../views/dashboard/UserRoles.vue'),
+            },
+            {
                 path: 'migrations',
                 name: 'migrations',
                 component: () => import('../views/dashboard/Migrations.vue'),

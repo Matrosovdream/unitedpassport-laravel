@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class UserRole extends Model
 {
-    protected $fillable = ['name', 'slug', 'description', 'is_active'];
+    protected $fillable = ['name', 'slug', 'description', 'is_editable', 'is_active'];
 
     protected function casts(): array
     {
         return [
+            'is_editable' => 'boolean',
             'is_active' => 'boolean',
         ];
     }

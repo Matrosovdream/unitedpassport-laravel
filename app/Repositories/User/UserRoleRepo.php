@@ -25,7 +25,9 @@ class UserRoleRepo extends AbstractRepo
             'name' => $item->name,
             'slug' => $item->slug,
             'description' => $item->description,
+            'is_editable' => $item->is_editable,
             'is_active' => $item->is_active,
+            'rights' => $item->relationLoaded('rights') ? $item->rights->toArray() : [],
             'Model' => $item,
         ];
     }

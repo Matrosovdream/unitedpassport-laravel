@@ -1,3 +1,5 @@
 - [feedback_use_repos.md](feedback_use_repos.md) — Always use Repositories for data access, not Models directly
 - [project_route_structure.md](project_route_structure.md) — 3 route types: api (SPA, versioned), web, rest (external/webhooks); folder-based with matching controller structure
 - [feedback_use_actions.md](feedback_use_actions.md) — Thin controllers, inject Action classes from app/Http/Actions/ for all logic
+- [feedback_use_services.md](feedback_use_services.md) — Actions call Services (app/Services/), split by domain; keep classes small
+- [feedback_docker_commands.md](feedback_docker_commands.md) — Run php artisan/composer via `docker compose -f compose.dev.yaml exec workspace`

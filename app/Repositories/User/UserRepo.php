@@ -38,6 +38,12 @@ class UserRepo extends AbstractRepo
             'display_name' => $item->display_name,
             'user_status' => $item->user_status,
             'role_id' => $item->role_id,
+            'role' => $item->relationLoaded('role') && $item->role ? [
+                'id' => $item->role->id,
+                'name' => $item->role->name,
+                'slug' => $item->role->slug,
+            ] : null,
+            'created_at' => $item->created_at,
             'Model' => $item,
         ];
     }

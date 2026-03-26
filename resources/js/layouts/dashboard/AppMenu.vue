@@ -10,10 +10,15 @@ const model = ref([
         ]
     },
     {
-        label: 'Management',
-        path: '/management',
+        label: 'Users',
         items: [
             { label: 'Users', icon: 'pi pi-fw pi-users', to: '/dashboard/users' },
+            { label: 'User Roles', icon: 'pi pi-fw pi-shield', to: '/dashboard/user-roles' }
+        ]
+    },
+    {
+        label: 'Management',
+        items: [
             { label: 'Settings', icon: 'pi pi-fw pi-cog', to: '/dashboard/settings' }
         ]
     },
