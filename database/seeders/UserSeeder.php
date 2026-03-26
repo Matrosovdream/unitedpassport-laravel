@@ -12,7 +12,7 @@ class UserSeeder extends Seeder
     {
         $adminRole = UserRole::where('slug', 'admin')->first();
 
-        User::factory()->create([
+        User::create([
             'name' => 'Admin',
             'email' => 'admin@admin.com',
             'password' => bcrypt('admin'),
