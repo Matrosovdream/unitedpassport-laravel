@@ -11,9 +11,9 @@ class UserService
         protected UserRepo $userRepo,
     ) {}
 
-    public function getAll()
+    public function getAll(array $filter = [], int $perPage = 20, array $sorting = [])
     {
-        return $this->userRepo->getAll(paginate: 100);
+        return $this->userRepo->getAll($filter, $perPage, $sorting);
     }
 
     public function getById(int $id)

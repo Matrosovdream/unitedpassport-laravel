@@ -10,9 +10,12 @@ import Select from 'primevue/select';
 import Password from 'primevue/password';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
+import { useListParams } from '../../composables/useListParams';
 
 const confirm = useConfirm();
 const toast = useToast();
+const { currentPage, perPage, sortField, sortOrder, apiParams, onPage, onSort } = useListParams();
+
 const users = ref([]);
 const roles = ref([]);
 const loading = ref(true);
@@ -20,6 +23,7 @@ const dialogVisible = ref(false);
 const saving = ref(false);
 const editingUser = ref(null);
 const errors = ref({});
+const totalRecords = ref(0);
 
 const form = ref({
     name: '',
@@ -37,8 +41,9 @@ onMounted(async () => {
 async function loadUsers() {
     loading.value = true;
     try {
-        const { data } = await window.axios.get('/users');
+        const { data } = await window.axios.get('/users', { params: apiParams() });
         users.value = data.users;
+        totalRecords.value = data.pagination.total;
     } catch (e) {
         console.error('Failed to load users', e);
     } finally {
@@ -48,7 +53,7 @@ async function loadUsers() {
 
 async function loadRoles() {
     try {
-        const { data } = await window.axios.get('/user-roles');
+        const { data } = await window.axios.get('/user-roles', { params: { per_page: 100 } });
         roles.value = data.roles;
     } catch (e) {
         console.error('Failed to load roles', e);
@@ -123,11 +128,6 @@ async function deleteUser(id) {
     }
 }
 
-function roleName(roleId) {
-    const role = roles.value.find(r => r.id === roleId);
-    return role ? role.name : null;
-}
-
 const statusOptions = [
     { label: 'Active', value: 0 },
     { label: 'Inactive', value: 1 },
@@ -141,7 +141,21 @@ const statusOptions = [
             <Button label="Add User" icon="pi pi-plus" @click="openAdd" />
         </div>
 
-        <DataTable :value="users" :loading="loading" stripedRows paginator :rows="20" :rowsPerPageOptions="[10, 20, 50]">
+        <DataTable
+            :value="users"
+            :loading="loading"
+            lazy
+            :totalRecords="totalRecords"
+            :rows="perPage"
+            :first="(currentPage - 1) * perPage"
+            :rowsPerPageOptions="[10, 20, 50]"
+            :sortField="sortField"
+            :sortOrder="sortOrder"
+            paginator
+            stripedRows
+            @page="onPage($event, loadUsers)"
+            @sort="onSort($event, loadUsers)"
+        >
             <Column field="id" header="#" sortable style="width: 60px" />
             <Column field="name" header="Name" sortable />
             <Column field="email" header="Email" sortable />

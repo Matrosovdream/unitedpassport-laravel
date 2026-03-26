@@ -16,9 +16,9 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function index(GetUsersAction $action): JsonResponse
+    public function index(Request $request, GetUsersAction $action): JsonResponse
     {
-        return $action->handle();
+        return $action->handle($request);
     }
 
     public function store(Request $request, AddUserAction $action): JsonResponse
@@ -36,9 +36,9 @@ class UserController extends Controller
         return $action->handle($id);
     }
 
-    public function roles(GetUserRolesAction $action): JsonResponse
+    public function roles(Request $request, GetUserRolesAction $action): JsonResponse
     {
-        return $action->handle();
+        return $action->handle($request);
     }
 
     public function storeRole(Request $request, AddUserRoleAction $action): JsonResponse

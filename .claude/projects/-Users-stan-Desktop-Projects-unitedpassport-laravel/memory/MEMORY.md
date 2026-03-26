@@ -2,4 +2,5 @@
 - [project_route_structure.md](project_route_structure.md) — 3 route types: api (SPA, versioned), web, rest (external/webhooks); folder-based with matching controller structure
 - [feedback_use_actions.md](feedback_use_actions.md) — Thin controllers, inject Action classes from app/Http/Actions/ for all logic
 - [feedback_use_services.md](feedback_use_services.md) — Actions call Services (app/Services/), split by domain; keep classes small
+- [feedback_list_url_params.md](feedback_list_url_params.md) — Lists: server-side pagination/sort, sync to URL params, use useListParams composable
 - [feedback_docker_commands.md](feedback_docker_commands.md) — Run php artisan/composer via `docker compose -f compose.dev.yaml exec workspace`

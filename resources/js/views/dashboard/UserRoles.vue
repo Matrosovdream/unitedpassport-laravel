@@ -11,9 +11,12 @@ import Checkbox from 'primevue/checkbox';
 import ToggleSwitch from 'primevue/toggleswitch';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
+import { useListParams } from '../../composables/useListParams';
 
 const confirm = useConfirm();
 const toast = useToast();
+const { currentPage, perPage, sortField, sortOrder, apiParams, onPage, onSort } = useListParams();
+
 const roles = ref([]);
 const availableRights = ref([]);
 const loading = ref(true);
@@ -21,6 +24,7 @@ const dialogVisible = ref(false);
 const saving = ref(false);
 const editingRole = ref(null);
 const errors = ref({});
+const totalRecords = ref(0);
 
 const form = ref({
     name: '',
@@ -37,9 +41,10 @@ onMounted(async () => {
 async function loadRoles() {
     loading.value = true;
     try {
-        const { data } = await window.axios.get('/user-roles');
+        const { data } = await window.axios.get('/user-roles', { params: apiParams() });
         roles.value = data.roles;
         availableRights.value = data.available_rights || [];
+        totalRecords.value = data.pagination.total;
     } catch (e) {
         console.error('Failed to load roles', e);
     } finally {
@@ -140,7 +145,21 @@ async function deleteRole(id) {
             <Button label="Add Role" icon="pi pi-plus" @click="openAdd" />
         </div>
 
-        <DataTable :value="roles" :loading="loading" stripedRows>
+        <DataTable
+            :value="roles"
+            :loading="loading"
+            lazy
+            :totalRecords="totalRecords"
+            :rows="perPage"
+            :first="(currentPage - 1) * perPage"
+            :rowsPerPageOptions="[10, 20, 50]"
+            :sortField="sortField"
+            :sortOrder="sortOrder"
+            paginator
+            stripedRows
+            @page="onPage($event, loadRoles)"
+            @sort="onSort($event, loadRoles)"
+        >
             <Column field="id" header="#" sortable style="width: 60px" />
             <Column field="name" header="Name" sortable />
             <Column field="slug" header="Slug" sortable />

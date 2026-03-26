@@ -4,6 +4,7 @@ namespace App\Http\Actions\Api\V1\User;
 
 use App\Services\Users\UserService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class GetUsersAction
 {
@@ -11,11 +12,25 @@ class GetUsersAction
         protected UserService $userService,
     ) {}
 
-    public function handle(): JsonResponse
+    public function handle(Request $request): JsonResponse
     {
-        $result = $this->userService->getAll();
-        $users = $result['items']->map(fn($item) => collect($item)->except('Model'));
+        $perPage = (int) $request->input('per_page', 20);
+        $sorting = $request->input('sort_field')
+            ? [$request->input('sort_field') => $request->input('sort_order', 'asc')]
+            : [];
 
-        return response()->json(['users' => $users]);
+        $result = $this->userService->getAll([], $perPage, $sorting);
+        $paginator = $result['Model'];
+        $items = $result['items']->map(fn($item) => collect($item)->except('Model'));
+
+        return response()->json([
+            'users' => $items,
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ]);
     }
 }
