@@ -95,8 +95,8 @@ async function register() {
     errors.value = {};
 
     try {
-        await window.axios.get('/sanctum/csrf-cookie');
-        await window.axios.post('/api/register', form);
+        await window.axios.get('/sanctum/csrf-cookie', { baseURL: '/' });
+        await window.axios.post('/register', form);
         clearUserCache();
         router.push({ name: 'dashboard' });
     } catch (error) {

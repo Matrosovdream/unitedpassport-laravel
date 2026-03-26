@@ -7,7 +7,7 @@ const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
 const router = useRouter();
 
 async function logout() {
-    await window.axios.post('/api/logout');
+    await window.axios.post('/logout');
     clearUserCache();
     router.push({ name: 'login' });
 }

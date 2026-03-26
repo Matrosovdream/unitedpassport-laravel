@@ -1,0 +1,2 @@
+- [feedback_use_repos.md](feedback_use_repos.md) — Always use Repositories for data access, not Models directly
+- [project_route_structure.md](project_route_structure.md) — 3 route types: api (SPA, versioned), web, rest (external/webhooks); folder-based with matching controller structure

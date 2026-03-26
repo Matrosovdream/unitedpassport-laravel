@@ -8,6 +8,32 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::create('payment_methods', function (Blueprint $table) {
+            $table->id();
+            $table->string('name', 100);
+            $table->string('slug', 100)->unique();
+            $table->string('gateway', 100)->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('payment_method_accounts', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('payment_method_id')->constrained('payment_methods')->cascadeOnDelete();
+            $table->string('label', 255)->nullable();
+            $table->string('login_id', 255)->nullable();
+            $table->string('transaction_key', 255)->nullable();
+            $table->string('api_key', 255)->nullable();
+            $table->string('api_secret', 255)->nullable();
+            $table->string('public_key', 255)->nullable();
+            $table->string('merchant_id', 255)->nullable();
+            $table->string('environment', 20)->default('sandbox');
+            $table->text('webhook_secret')->nullable();
+            $table->text('extra')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+
         Schema::create('form_payments', function (Blueprint $table) {
             $table->id();
             $table->string('receipt_id', 100)->nullable()->index();
@@ -18,7 +44,7 @@ return new class extends Migration
             $table->string('status', 100)->nullable()->index();
             $table->date('begin_date');
             $table->date('expire_date')->nullable();
-            $table->string('paysys', 100)->nullable();
+            $table->foreignId('payment_method')->default(1)->constrained('payment_methods');
             $table->boolean('test')->nullable();
             $table->timestamps();
         });
@@ -65,5 +91,7 @@ return new class extends Migration
         Schema::dropIfExists('payments_failed');
         Schema::dropIfExists('payments_authnet');
         Schema::dropIfExists('form_payments');
+        Schema::dropIfExists('payment_method_accounts');
+        Schema::dropIfExists('payment_methods');
     }
 };

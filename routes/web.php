@@ -1,7 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+/**
+ * Web routes for HTTP requests.
+ *
+ * Route files are loaded from routes/web/ directory.
+ */
 
-Route::get('/{any}', function () {
-    return view('app');
-})->where('any', '.*');
+foreach (glob(__DIR__ . '/web/*.php') as $file) {
+    require $file;
+}

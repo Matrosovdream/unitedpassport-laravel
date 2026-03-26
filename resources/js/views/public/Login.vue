@@ -65,8 +65,8 @@ async function login() {
     errorMessage.value = '';
 
     try {
-        await window.axios.get('/sanctum/csrf-cookie');
-        await window.axios.post('/api/login', form);
+        await window.axios.get('/sanctum/csrf-cookie', { baseURL: '/' });
+        await window.axios.post('/login', form);
         clearUserCache();
         router.push({ name: 'dashboard' });
     } catch (error) {

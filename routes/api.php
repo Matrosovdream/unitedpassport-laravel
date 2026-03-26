@@ -1,12 +1,17 @@
 <?php
 
-use App\Http\Controllers\Api\AuthController;
+/**
+ * API routes for the SPA application.
+ * Prefix: /api/v{n}
+ *
+ * Route files are loaded from routes/api/v{n}/ directories.
+ */
+
 use Illuminate\Support\Facades\Route;
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', [AuthController::class, 'user']);
-    Route::post('/logout', [AuthController::class, 'logout']);
+// V1 routes (current)
+Route::prefix('v1')->group(function () {
+    foreach (glob(__DIR__ . '/api/v1/*.php') as $file) {
+        require $file;
+    }
 });

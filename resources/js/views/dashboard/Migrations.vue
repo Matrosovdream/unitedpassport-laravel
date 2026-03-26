@@ -92,7 +92,7 @@ let pollTimer = null;
 
 onMounted(async () => {
     try {
-        const { data } = await window.axios.get('/api/migration/tables');
+        const { data } = await window.axios.get('/migration/tables');
         tables.value = data.tables;
         sourceUrl.value = data.config?.source_url || '';
         sourcePassword.value = data.config?.source_password || '';
@@ -134,7 +134,7 @@ function statusSeverity(status) {
 
 async function fetchStatus() {
     try {
-        const { data } = await window.axios.get('/api/migration/status');
+        const { data } = await window.axios.get('/migration/status');
         jobs.value = data.jobs;
     } catch (e) {
         console.error('Failed to fetch status', e);
@@ -163,7 +163,7 @@ async function startImport(tableKey) {
     starting.value = tableKey;
 
     try {
-        await window.axios.post('/api/migration/import', {
+        await window.axios.post('/migration/import', {
             table: tableKey,
             source_url: sourceUrl.value,
             source_password: sourcePassword.value,

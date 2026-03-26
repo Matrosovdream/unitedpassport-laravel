@@ -70,7 +70,7 @@ async function getUser() {
     if (cachedUser !== undefined) return cachedUser;
 
     try {
-        const { data } = await window.axios.get('/api/user');
+        const { data } = await window.axios.get('/user');
         cachedUser = data.user;
     } catch {
         cachedUser = null;
