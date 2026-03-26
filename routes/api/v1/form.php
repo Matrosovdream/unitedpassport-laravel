@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\FormController;
+use App\Http\Controllers\Api\V1\FormEntryController;
 use Illuminate\Support\Facades\Route;
 
 // Public form endpoints
@@ -16,4 +17,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/form-fields/{fieldId}', [FormController::class, 'updateField']);
     Route::delete('/form-fields/{fieldId}', [FormController::class, 'deleteField']);
     Route::post('/forms/{formId}/fields/reorder', [FormController::class, 'reorderFields']);
+
+    Route::get('/form-entries', [FormEntryController::class, 'index']);
+    Route::get('/form-entries/{id}', [FormEntryController::class, 'show']);
+    Route::put('/form-entries/{id}', [FormEntryController::class, 'update']);
+    Route::delete('/form-entries/{id}', [FormEntryController::class, 'destroy']);
 });

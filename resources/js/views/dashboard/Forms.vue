@@ -7,6 +7,7 @@ import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
 import { useListParams } from '../../composables/useListParams';
+import PaginatorInfo from '../../components/PaginatorInfo.vue';
 
 const router = useRouter();
 const toast = useToast();
@@ -61,6 +62,9 @@ function openForm(form) {
             @row-click="openForm($event.data)"
             class="cursor-pointer"
         >
+            <template #paginatorstart>
+                <PaginatorInfo :currentPage="currentPage" :perPage="perPage" :total="totalRecords" />
+            </template>
             <Column field="id" header="#" sortable style="width: 60px" />
             <Column field="name" header="Name" sortable />
             <Column field="form_key" header="Key" sortable />

@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 
-export function useListParams(defaults = {}) {
+export function useListParams(defaults = {}, getExtraParams = null) {
     const router = useRouter();
     const route = useRoute();
 
@@ -26,6 +26,7 @@ export function useListParams(defaults = {}) {
             params.sort_order = sortOrder.value === 1 ? 'asc' : 'desc';
         }
 
+        if (getExtraParams) Object.assign(params, getExtraParams());
         router.replace({ query: params });
     }
 

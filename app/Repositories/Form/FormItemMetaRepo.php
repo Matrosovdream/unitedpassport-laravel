@@ -22,6 +22,26 @@ class FormItemMetaRepo extends AbstractRepo
         return $this->mapItems($items);
     }
 
+    private function unpackValue(?string $value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        $unserialized = @unserialize($value);
+
+        if ($unserialized === false && $value !== 'b:0;') {
+            return $value;
+        }
+
+        if (is_array($unserialized)) {
+            $flat = array_values(array_filter($unserialized, fn($v) => $v !== '' && $v !== null));
+            return implode(', ', array_map('strval', $flat));
+        }
+
+        return (string) $unserialized;
+    }
+
     public function mapItem($item)
     {
         if (empty($item)) {
@@ -30,9 +50,17 @@ class FormItemMetaRepo extends AbstractRepo
 
         return [
             'id' => $item->id,
-            'meta_value' => $item->meta_value,
+            'meta_value' => $this->unpackValue($item->meta_value),
             'field_id' => $item->field_id,
             'item_id' => $item->item_id,
+            'field' => $item->relationLoaded('field') && $item->field ? [
+                'id' => $item->field->id,
+                'name' => $item->field->name,
+                'type' => $item->field->type,
+                'field_order' => $item->field->field_order,
+                'page_num' => $item->field->page_num,
+                'field_key' => $item->field->field_key,
+            ] : null,
             'Model' => $item,
         ];
     }

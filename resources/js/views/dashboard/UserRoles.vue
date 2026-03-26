@@ -12,6 +12,7 @@ import ToggleSwitch from 'primevue/toggleswitch';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import { useListParams } from '../../composables/useListParams';
+import PaginatorInfo from '../../components/PaginatorInfo.vue';
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -160,6 +161,9 @@ async function deleteRole(id) {
             @page="onPage($event, loadRoles)"
             @sort="onSort($event, loadRoles)"
         >
+            <template #paginatorstart>
+                <PaginatorInfo :currentPage="currentPage" :perPage="perPage" :total="totalRecords" />
+            </template>
             <Column field="id" header="#" sortable style="width: 60px" />
             <Column field="name" header="Name" sortable />
             <Column field="slug" header="Slug" sortable />

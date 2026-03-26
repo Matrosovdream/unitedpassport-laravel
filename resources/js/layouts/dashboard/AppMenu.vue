@@ -19,7 +19,14 @@ const model = ref([
     {
         label: 'Forms',
         items: [
-            { label: 'Forms', icon: 'pi pi-fw pi-file-edit', to: '/dashboard/forms' }
+            { label: 'Forms', icon: 'pi pi-fw pi-file-edit', to: '/dashboard/forms' },
+            { label: 'Entries', icon: 'pi pi-fw pi-list', to: '/dashboard/entries' }
+        ]
+    },
+    {
+        label: 'Labels',
+        items: [
+            { label: 'Shipping Labels', icon: 'pi pi-fw pi-tag', to: '/dashboard/labels' }
         ]
     },
     {

@@ -95,6 +95,56 @@ class FormService
         return $this->fieldRepo->getByFormId($formId);
     }
 
+    public function getEntries(array $filter, int $perPage, array $sorting)
+    {
+        return $this->itemRepo->search($filter, $perPage, $sorting);
+    }
+
+    public function getEntry(int $id)
+    {
+        return $this->itemRepo->getWithMetas($id);
+    }
+
+    public function deleteEntry(int $id): bool
+    {
+        return $this->itemRepo->delete($id);
+    }
+
+    public function updateEntry(int $itemId, array $values): ?array
+    {
+        $item = $this->itemRepo->getByID($itemId);
+
+        if (!$item) {
+            return null;
+        }
+
+        $fields = $this->fieldRepo->getByFormId($item['form_id']);
+
+        foreach ($fields as $field) {
+            $fieldKey = $field['field_key'];
+            if (!\array_key_exists($fieldKey, $values)) {
+                continue;
+            }
+
+            $existing = $this->metaRepo->getFirst([
+                'field_id' => $field['id'],
+                'item_id' => $itemId,
+            ]);
+
+            if ($existing) {
+                $this->metaRepo->update($existing['id'], ['meta_value' => $values[$fieldKey]]);
+            } else {
+                $this->metaRepo->create([
+                    'item_id' => $itemId,
+                    'field_id' => $field['id'],
+                    'meta_value' => $values[$fieldKey],
+                ]);
+            }
+        }
+
+        return $this->itemRepo->getWithMetas($itemId);
+    }
+
     public function submitForm(int $formId, array $values, ?int $userId, ?string $ip): array
     {
         $item = $this->itemRepo->create([

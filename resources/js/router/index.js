@@ -67,6 +67,21 @@ const routes = [
                 component: () => import('../views/dashboard/FormEdit.vue'),
             },
             {
+                path: 'entries',
+                name: 'entries',
+                component: () => import('../views/dashboard/Entries.vue'),
+            },
+            {
+                path: 'entries/:id',
+                name: 'entry-show',
+                component: () => import('../views/dashboard/EntryShow.vue'),
+            },
+            {
+                path: 'labels',
+                name: 'shipping-labels',
+                component: () => import('../views/dashboard/ShippingLabels.vue'),
+            },
+            {
                 path: 'migrations',
                 name: 'migrations',
                 component: () => import('../views/dashboard/Migrations.vue'),

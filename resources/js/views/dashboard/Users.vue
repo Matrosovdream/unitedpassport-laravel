@@ -11,6 +11,7 @@ import Password from 'primevue/password';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import { useListParams } from '../../composables/useListParams';
+import PaginatorInfo from '../../components/PaginatorInfo.vue';
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -156,6 +157,9 @@ const statusOptions = [
             @page="onPage($event, loadUsers)"
             @sort="onSort($event, loadUsers)"
         >
+            <template #paginatorstart>
+                <PaginatorInfo :currentPage="currentPage" :perPage="perPage" :total="totalRecords" />
+            </template>
             <Column field="id" header="#" sortable style="width: 60px" />
             <Column field="name" header="Name" sortable />
             <Column field="email" header="Email" sortable />
