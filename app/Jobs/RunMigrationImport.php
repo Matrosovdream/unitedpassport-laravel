@@ -68,7 +68,13 @@ class RunMigrationImport implements ShouldQueue
             while (true) {
                 $result = $migrator->importPage($job->table_key, $page);
 
-                $allErrors = array_merge($allErrors, $result['errors'] ?? []);
+                // Keep only the last 50 errors to avoid memory buildup
+                foreach ($result['errors'] ?? [] as $err) {
+                    $allErrors[] = $err;
+                    if (count($allErrors) > 50) {
+                        array_shift($allErrors);
+                    }
+                }
 
                 $job->update([
                     'current_page' => $page,
@@ -77,8 +83,13 @@ class RunMigrationImport implements ShouldQueue
                     'imported' => $job->imported + ($result['imported'] ?? 0),
                     'updated' => $job->updated + ($result['updated'] ?? 0),
                     'skipped' => $job->skipped + ($result['skipped'] ?? 0),
-                    'errors' => array_slice($allErrors, -50), // keep last 50 errors
+                    'errors' => $allErrors,
                 ]);
+
+                // Extract values before freeing memory
+                $totalPages = $result['total_pages'] ?? null;
+                $rowCount = ($result['imported'] ?? 0) + ($result['updated'] ?? 0) + ($result['skipped'] ?? 0);
+                unset($result);
 
                 // Refresh model to get updated counters and check if stopped
                 $job->refresh();
@@ -88,13 +99,11 @@ class RunMigrationImport implements ShouldQueue
                 }
 
                 // Stop if no more pages
-                $totalPages = $result['total_pages'] ?? null;
                 if ($totalPages !== null && $page >= $totalPages) {
                     break;
                 }
 
                 // Stop if the page returned no rows (no pagination info from source)
-                $rowCount = ($result['imported'] ?? 0) + ($result['updated'] ?? 0) + ($result['skipped'] ?? 0);
                 if ($rowCount === 0) {
                     break;
                 }

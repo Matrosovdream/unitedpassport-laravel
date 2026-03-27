@@ -58,6 +58,24 @@ class FormOldKeySeeder extends Seeder
                 232 => 'birthday',
                 19 => 'social_security_number',
             ],
+            6 => [
+                164 => 'status',
+            ],
+            12 => [
+                422 => 'status',
+            ],
+            11 => [
+                277 => 'status',
+            ],
+            7 => [
+                193 => 'status',
+            ],
+            4 => [
+                150 => 'status',
+            ],
+            10 => [
+                259 => 'status',
+            ],
         ];
     }
 }

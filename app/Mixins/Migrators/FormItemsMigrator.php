@@ -7,21 +7,13 @@ use Illuminate\Support\Facades\Log;
 
 class FormItemsMigrator extends AbstractMigrator
 {
-    protected const STATUS_FIELD_MAP = [
-        1 => 7,
-        6 => 164,
-        12 => 422,
-        11 => 277,
-        7 => 193,
-        4 => 150,
-        10 => 259,
-    ];
-
     // Cached lookups
     protected ?array $existingFormIds = null;
     protected ?array $existingFieldIds = null;
     protected ?array $fieldKeyLookup = null;
     protected ?array $existingItemIds = null;
+    protected ?array $statusLookup = null;
+    protected ?array $statusFieldIds = null;
 
     protected function getExistingFormIds(): array
     {
@@ -60,6 +52,29 @@ class FormItemsMigrator extends AbstractMigrator
     protected function getExistingItemIds(array $ids): array
     {
         return DB::table('form_items')->whereIn('id', $ids)->pluck('id')->flip()->all();
+    }
+
+    protected function getStatusLookup(): array
+    {
+        if ($this->statusLookup === null) {
+            $this->statusLookup = [];
+            $statuses = DB::table('form_statuses')->get();
+            foreach ($statuses as $s) {
+                $this->statusLookup[$s->form_id][strtolower(trim($s->value))] = $s->id;
+            }
+        }
+        return $this->statusLookup;
+    }
+
+    protected function getStatusFieldIds(): array
+    {
+        if ($this->statusFieldIds === null) {
+            $this->statusFieldIds = DB::table('form_old_keys')
+                ->where('new_field_code', 'status')
+                ->pluck('old_field_id', 'form_id')
+                ->all();
+        }
+        return $this->statusFieldIds;
     }
 
     protected function sanitizeTimestamp(?string $value): ?string
@@ -129,11 +144,14 @@ class FormItemsMigrator extends AbstractMigrator
         $formIds = $this->getExistingFormIds();
         $fieldIds = $this->getExistingFieldIds();
         $fieldKeys = $this->getFieldKeyLookup();
+        $statusLookup = $this->getStatusLookup();
+        $statusFieldIds = $this->getStatusFieldIds();
 
         // Collect valid items and metas
         $itemBatch = [];
         $metaBatch = [];
         $validItemIds = [];
+        $itemStatusUpdates = []; // [item_id => status_id]
 
         foreach ($rows as $row) {
             try {
@@ -147,6 +165,9 @@ class FormItemsMigrator extends AbstractMigrator
                 $itemBatch[] = $mapped;
                 $validItemIds[] = $mapped['id'];
 
+                // The status field_id for this form (if any)
+                $statusFieldId = $statusFieldIds[$mapped['form_id']] ?? null;
+
                 // Collect metas
                 if (!empty($row['metas']) && is_array($row['metas'])) {
                     foreach ($row['metas'] as $meta) {
@@ -158,6 +179,14 @@ class FormItemsMigrator extends AbstractMigrator
                         // Only include metas that belong to this item
                         if (($meta['item_id'] ?? null) != $mapped['id']) {
                             continue;
+                        }
+
+                        // Resolve status_id from the status meta
+                        if ($statusFieldId && $fieldId === $statusFieldId && $mapped['form_id']) {
+                            $statusValue = strtolower(trim($meta['meta_value'] ?? ''));
+                            if ($statusValue !== '' && isset($statusLookup[$mapped['form_id']][$statusValue])) {
+                                $itemStatusUpdates[$mapped['id']] = $statusLookup[$mapped['form_id']][$statusValue];
+                            }
                         }
 
                         $createdAt = $this->sanitizeTimestamp($meta['created_at'] ?? null) ?? now();
@@ -224,41 +253,57 @@ class FormItemsMigrator extends AbstractMigrator
             }
         }
 
+        // Batch update status_id on items, grouped by status_id
+        if (!empty($itemStatusUpdates)) {
+            // Remove updates for failed items
+            foreach ($failedItemIds as $failedId => $_) {
+                unset($itemStatusUpdates[$failedId]);
+            }
+
+            $byStatus = [];
+            foreach ($itemStatusUpdates as $itemId => $statusId) {
+                $byStatus[$statusId][] = $itemId;
+            }
+            foreach ($byStatus as $statusId => $itemIds) {
+                DB::table('form_items')
+                    ->whereIn('id', $itemIds)
+                    ->update(['status_id' => $statusId]);
+            }
+        }
+
         return $result;
     }
 
     public function postImport(): void
     {
-        // Set status_id on items based on status field meta values
-        $allStatuses = DB::table('form_statuses')->get();
-        $statusLookup = [];
-        foreach ($allStatuses as $s) {
-            $statusLookup[$s->form_id][strtolower(trim($s->value))] = $s->id;
-        }
+        // Backfill status_id for any items that still have null status
+        $statusLookup = $this->getStatusLookup();
+        $statusFieldIds = $this->getStatusFieldIds();
 
-        foreach (self::STATUS_FIELD_MAP as $formId => $fieldId) {
+        foreach ($statusFieldIds as $formId => $fieldId) {
             if (!isset($statusLookup[$formId])) {
                 continue;
             }
 
-            $metas = DB::table('form_item_metas as m')
+            DB::table('form_item_metas as m')
                 ->join('form_items as i', 'i.id', '=', 'm.item_id')
                 ->where('m.field_id', $fieldId)
                 ->where('i.form_id', $formId)
+                ->whereNull('i.status_id')
                 ->select('m.item_id', 'm.meta_value')
-                ->get();
-
-            foreach ($metas as $meta) {
-                $value = strtolower(trim($meta->meta_value ?? ''));
-
-                if ($value === '' || !isset($statusLookup[$formId][$value])) {
-                    continue;
-                }
-
-                DB::table('form_items')
-                    ->where('id', $meta->item_id)
-                    ->update(['status_id' => $statusLookup[$formId][$value]]);
-            }
+                ->orderBy('m.item_id')
+                ->chunk(500, function ($metas) use ($statusLookup, $formId) {
+                    $updates = [];
+                    foreach ($metas as $meta) {
+                        $value = strtolower(trim($meta->meta_value ?? ''));
+                        if ($value !== '' && isset($statusLookup[$formId][$value])) {
+                            $updates[$statusLookup[$formId][$value]][] = $meta->item_id;
+                        }
+                    }
+                    foreach ($updates as $statusId => $itemIds) {
+                        DB::table('form_items')->whereIn('id', $itemIds)->update(['status_id' => $statusId]);
+                    }
+                });
         }
     }
 }
