@@ -32,6 +32,11 @@ class Form extends Model
         return $this->hasMany(FormItem::class);
     }
 
+    public function statuses(): HasMany
+    {
+        return $this->hasMany(FormStatus::class);
+    }
+
     public function settings(): HasMany
     {
         return $this->hasMany(FormSetting::class);

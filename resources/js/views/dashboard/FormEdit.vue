@@ -11,6 +11,7 @@ import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
 import InputSwitch from 'primevue/inputswitch';
+import ColorPicker from 'primevue/colorpicker';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 
@@ -28,6 +29,9 @@ const form = ref(null);
 const generalForm = ref({});
 const fields = ref([]);
 const pages = ref([{ num: 1, title: 'Page 1' }]);
+const statuses = ref([]);
+const newStatus = ref({ code: '', value: '', description: '', color: '#2563eb' });
+const savingStatusId = ref(null);
 
 // Inline editing
 const expandedFieldId = ref(null);
@@ -78,6 +82,7 @@ async function loadForm() {
             is_template: !!data.form.is_template,
         };
         fields.value = data.form.fields || [];
+        statuses.value = data.form.statuses || [];
         loadPageTitles(data.form.options);
         rebuildPages();
     } catch (e) {
@@ -345,6 +350,71 @@ async function deleteField(fieldId) {
         toast.add({ severity: 'error', summary: e.response?.data?.message || 'Failed to delete', life: 5000 });
     }
 }
+
+// ── Statuses tab ──
+async function addStatus() {
+    if (!newStatus.value.code || !newStatus.value.value) {
+        toast.add({ severity: 'warn', summary: 'Code and Value are required', life: 3000 });
+        return;
+    }
+    try {
+        const { data } = await window.axios.post(`/forms/${formId.value}/statuses`, {
+            ...newStatus.value,
+            color: newStatus.value.color?.startsWith('#') ? newStatus.value.color : `#${newStatus.value.color}`,
+        });
+        statuses.value.push(data.status);
+        newStatus.value = { code: '', value: '', description: '', color: '#2563eb' };
+        toast.add({ severity: 'success', summary: 'Status added', life: 3000 });
+    } catch (e) {
+        toast.add({ severity: 'error', summary: e.response?.data?.message || 'Failed to add status', life: 5000 });
+    }
+}
+
+let statusSaveTimer = null;
+function onStatusInput(status) {
+    clearTimeout(statusSaveTimer);
+    statusSaveTimer = setTimeout(() => saveStatus(status), 600);
+}
+
+async function saveStatus(status) {
+    savingStatusId.value = status.id;
+    try {
+        const { data } = await window.axios.put(`/form-statuses/${status.id}`, {
+            code: status.code,
+            value: status.value,
+            description: status.description,
+            color: status.color?.startsWith('#') ? status.color : `#${status.color}`,
+        });
+        const idx = statuses.value.findIndex(s => s.id === status.id);
+        if (idx !== -1) statuses.value[idx] = { ...statuses.value[idx], ...data.status };
+    } catch (e) {
+        toast.add({ severity: 'error', summary: 'Failed to save status', life: 3000 });
+    } finally {
+        savingStatusId.value = null;
+    }
+}
+
+function confirmDeleteStatus(status) {
+    confirm.require({
+        message: `Delete status "${status.value}"?`,
+        header: 'Delete Status',
+        icon: 'pi pi-trash',
+        rejectLabel: 'Cancel',
+        acceptLabel: 'Delete',
+        acceptClass: 'p-button-danger',
+        accept: () => deleteStatus(status.id),
+    });
+}
+
+async function deleteStatus(statusId) {
+    try {
+        await window.axios.delete(`/form-statuses/${statusId}`);
+        statuses.value = statuses.value.filter(s => s.id !== statusId);
+        toast.add({ severity: 'success', summary: 'Status deleted', life: 3000 });
+    } catch (e) {
+        toast.add({ severity: 'error', summary: e.response?.data?.message || 'Failed to delete', life: 5000 });
+    }
+}
 </script>
 
 <template>
@@ -354,12 +424,14 @@ async function deleteField(fieldId) {
                 <Button icon="pi pi-arrow-left" text rounded @click="router.push({ name: 'forms' })" />
                 <h2 class="text-2xl font-semibold">{{ form.name || 'Untitled Form' }}</h2>
             </div>
+            <Button label="Save" icon="pi pi-check" :loading="saving" @click="saveGeneral" />
         </div>
 
         <Tabs value="general">
             <TabList>
                 <Tab value="general">General</Tab>
                 <Tab value="edit">Edit</Tab>
+                <Tab value="statuses">Statuses</Tab>
             </TabList>
             <TabPanels>
                 <!-- General Tab -->
@@ -396,9 +468,6 @@ async function deleteField(fieldId) {
                                 <InputSwitch v-model="generalForm.is_template" />
                                 <label class="text-sm">Template</label>
                             </div>
-                        </div>
-                        <div>
-                            <Button label="Save" :loading="saving" @click="saveGeneral" />
                         </div>
                     </div>
                 </TabPanel>
@@ -556,6 +625,54 @@ async function deleteField(fieldId) {
                                         </div>
                                     </template>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </TabPanel>
+
+                <!-- Statuses Tab -->
+                <TabPanel value="statuses">
+                    <div class="pt-4 max-w-4xl">
+                        <!-- Add new status -->
+                        <div class="flex gap-2 items-end mb-6">
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Code</label>
+                                <InputText v-model="newStatus.code" placeholder="e.g. on-hold" size="small" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Value</label>
+                                <InputText v-model="newStatus.value" placeholder="e.g. On Hold" size="small" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Description</label>
+                                <InputText v-model="newStatus.description" placeholder="Optional" size="small" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Color</label>
+                                <ColorPicker v-model="newStatus.color" format="hex" />
+                            </div>
+                            <Button label="Add" icon="pi pi-plus" size="small" @click="addStatus" />
+                        </div>
+
+                        <!-- Status list -->
+                        <div v-if="statuses.length === 0" class="text-surface-400 text-sm py-4">
+                            No statuses defined for this form.
+                        </div>
+                        <div v-else class="flex flex-col gap-2">
+                            <div
+                                v-for="status in statuses"
+                                :key="status.id"
+                                class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 group"
+                            >
+                                <div class="w-6 h-6 rounded-full flex-shrink-0 border border-surface-300" :style="{ backgroundColor: status.color || '#6b7280' }"></div>
+                                <div class="flex-1 grid grid-cols-4 gap-2 items-center">
+                                    <InputText v-model="status.code" size="small" @input="onStatusInput(status)" />
+                                    <InputText v-model="status.value" size="small" @input="onStatusInput(status)" />
+                                    <InputText v-model="status.description" size="small" placeholder="Description" @input="onStatusInput(status)" />
+                                    <ColorPicker v-model="status.color" format="hex" @update:modelValue="onStatusInput(status)" />
+                                </div>
+                                <i v-if="savingStatusId === status.id" class="pi pi-spin pi-spinner text-xs text-primary-500"></i>
+                                <Button icon="pi pi-trash" text rounded size="small" severity="danger" class="opacity-0 group-hover:opacity-100 transition-opacity" @click="confirmDeleteStatus(status)" />
                             </div>
                         </div>
                     </div>

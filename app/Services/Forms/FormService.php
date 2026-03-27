@@ -38,6 +38,8 @@ class FormService
         $form['fields'] = $this->fieldRepo->getByFormId($id)
             ->map(fn($field) => collect($field)->except('Model'));
 
+        $form['statuses'] = $form['Model']->statuses()->orderBy('id')->get();
+
         return $form;
     }
 

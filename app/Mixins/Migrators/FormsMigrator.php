@@ -3,6 +3,7 @@
 namespace App\Mixins\Migrators;
 
 use App\Repositories\Form\FormRepo;
+use Database\Seeders\FormStatusSeeder;
 
 class FormsMigrator extends AbstractMigrator
 {
@@ -39,10 +40,12 @@ class FormsMigrator extends AbstractMigrator
 
         if ($existing) {
             $this->repo->update($mapped['id'], $mapped);
+            FormStatusSeeder::seedForForm((int) $mapped['id']);
             return 'updated';
         }
 
         $this->repo->getModel()->forceCreate($mapped);
+        FormStatusSeeder::seedForForm((int) $mapped['id']);
         return 'created';
     }
 }

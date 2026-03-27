@@ -17,6 +17,10 @@ Route::put('/form-fields/{fieldId}', [FormController::class, 'updateField']);
 Route::delete('/form-fields/{fieldId}', [FormController::class, 'deleteField']);
 Route::post('/forms/{formId}/fields/reorder', [FormController::class, 'reorderFields']);
 
+Route::post('/forms/{formId}/statuses', [FormController::class, 'addStatus']);
+Route::put('/form-statuses/{statusId}', [FormController::class, 'updateStatus']);
+Route::delete('/form-statuses/{statusId}', [FormController::class, 'deleteStatus']);
+
 Route::get('/form-entries', [FormEntryController::class, 'index']);
 Route::get('/form-entries/{id}', [FormEntryController::class, 'show']);
 Route::put('/form-entries/{id}', [FormEntryController::class, 'update']);
