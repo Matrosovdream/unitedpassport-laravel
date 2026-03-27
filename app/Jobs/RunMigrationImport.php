@@ -105,6 +105,9 @@ class RunMigrationImport implements ShouldQueue
                 }
 
                 $page++;
+
+                // Delay between pages to avoid overwhelming the source
+                sleep(2);
             }
 
             $migrator->postImport();

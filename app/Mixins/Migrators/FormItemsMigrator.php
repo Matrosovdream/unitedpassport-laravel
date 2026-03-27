@@ -82,8 +82,8 @@ class FormItemsMigrator extends AbstractMigrator
             'ip' => $row['ip'] ?? null,
             'form_id' => $formId,
             'user_id' => !empty($row['user_id']) ? $row['user_id'] : null,
-            'is_draft' => $row['is_draft'] ?? false,
-            'updated_by' => !empty($row['updated_by']) ? $row['updated_by'] : null,
+            'is_draft' => (bool) ($row['is_draft'] ?? false),
+            'updated_by' => !empty($row['updated_by']) ? (int) $row['updated_by'] : null,
             'created_at' => $this->sanitizeTimestamp($row['created_at'] ?? null) ?? now(),
             'updated_at' => $this->sanitizeTimestamp($row['updated_at'] ?? null) ?? now(),
         ];
@@ -155,6 +155,11 @@ class FormItemsMigrator extends AbstractMigrator
                             continue;
                         }
 
+                        // Only include metas that belong to this item
+                        if (($meta['item_id'] ?? null) != $mapped['id']) {
+                            continue;
+                        }
+
                         $createdAt = $this->sanitizeTimestamp($meta['created_at'] ?? null) ?? now();
 
                         $metaBatch[] = [
@@ -162,7 +167,7 @@ class FormItemsMigrator extends AbstractMigrator
                             'field_key' => $fieldKeys[$fieldId] ?? null,
                             'meta_value' => $meta['meta_value'] ?? null,
                             'field_id' => $fieldId,
-                            'item_id' => $meta['item_id'],
+                            'item_id' => $mapped['id'],
                             'created_at' => $createdAt,
                             'updated_at' => $createdAt,
                         ];
@@ -182,6 +187,7 @@ class FormItemsMigrator extends AbstractMigrator
         }
 
         // Bulk upsert items in chunks of 100
+        $failedItemIds = [];
         foreach (array_chunk($itemBatch, 100) as $chunk) {
             try {
                 DB::table('form_items')->upsert(
@@ -192,7 +198,16 @@ class FormItemsMigrator extends AbstractMigrator
             } catch (\Throwable $e) {
                 $result['errors'][] = 'Items upsert: ' . $e->getMessage();
                 Log::warning('Migration items upsert error', ['error' => $e->getMessage()]);
+                foreach ($chunk as $item) {
+                    $failedItemIds[$item['id']] = true;
+                }
             }
+        }
+
+        // Filter out metas for failed items
+        if (!empty($failedItemIds)) {
+            $metaBatch = array_filter($metaBatch, fn($m) => !isset($failedItemIds[$m['item_id']]));
+            $metaBatch = array_values($metaBatch);
         }
 
         // Bulk upsert metas in chunks of 100
