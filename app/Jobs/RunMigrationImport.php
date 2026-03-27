@@ -90,6 +90,8 @@ class RunMigrationImport implements ShouldQueue
                 $page++;
             }
 
+            $migrator->postImport();
+
             $job->update([
                 'status' => 'completed',
                 'completed_at' => now(),

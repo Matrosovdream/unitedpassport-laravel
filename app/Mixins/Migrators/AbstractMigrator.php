@@ -95,4 +95,12 @@ abstract class AbstractMigrator
      * Map source row columns to local columns.
      */
     abstract protected function mapColumns(array $row): array;
+
+    /**
+     * Run after all pages have been imported.
+     */
+    public function postImport(): void
+    {
+        // Override in subclasses if needed
+    }
 }

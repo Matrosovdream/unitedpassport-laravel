@@ -3,6 +3,7 @@
 namespace App\Mixins\Migrators;
 
 use App\Repositories\Form\FormFieldRepo;
+use Illuminate\Support\Facades\DB;
 
 class FormFieldsMigrator extends AbstractMigrator
 {
@@ -24,9 +25,9 @@ class FormFieldsMigrator extends AbstractMigrator
             'default_value' => $row['default_value'] ?? null,
             'options' => $row['options'] ?? null,
             'field_order' => $row['field_order'] ?? 0,
-            'page_num' => $row['page_num'] ?? 1,
+            'page_num' => 1,
             'required' => $row['required'] ?? null,
-            'field_options' => $row['field_options'] ?? null,
+            'field_options' => null,
             'form_id' => $row['form_id'] ?? null,
             'created_at' => $row['created_at'],
             'updated_at' => $row['created_at'],
@@ -36,6 +37,14 @@ class FormFieldsMigrator extends AbstractMigrator
     protected function migrateRow(array $row): string
     {
         $mapped = $this->mapColumns($row);
+
+        $formId = $mapped['form_id'] ? (int) $mapped['form_id'] : null;
+        $mapped['form_id'] = $formId;
+
+        if ($formId && !DB::table('forms')->where('id', $formId)->exists()) {
+            return 'skipped';
+        }
+
         $existing = $this->repo->getByID($mapped['id']);
 
         if ($existing) {
@@ -45,5 +54,34 @@ class FormFieldsMigrator extends AbstractMigrator
 
         $this->repo->getModel()->forceCreate($mapped);
         return 'created';
+    }
+
+    public function postImport(): void
+    {
+        $formIds = DB::table('form_fields')->distinct()->pluck('form_id')->filter();
+
+        foreach ($formIds as $formId) {
+            $fields = DB::table('form_fields')
+                ->where('form_id', $formId)
+                ->orderBy('field_order')
+                ->get(['id', 'type']);
+
+            $pageNum = 1;
+            $pages = [];
+
+            foreach ($fields as $field) {
+                if ($field->type === 'break') {
+                    $pageNum++;
+                }
+
+                $pages[$pageNum][] = $field->id;
+            }
+
+            foreach ($pages as $page => $ids) {
+                DB::table('form_fields')
+                    ->whereIn('id', $ids)
+                    ->update(['page_num' => $page]);
+            }
+        }
     }
 }
