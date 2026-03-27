@@ -9,7 +9,8 @@ class MigrationJob extends Model
     protected $fillable = [
         'table_key', 'status', 'current_page', 'total_pages', 'total_rows',
         'imported', 'updated', 'skipped', 'errors',
-        'source_url', 'source_password', 'started_at', 'completed_at',
+        'source_url', 'source_password', 'per_page', 'max_load',
+        'started_at', 'completed_at',
     ];
 
     protected function casts(): array

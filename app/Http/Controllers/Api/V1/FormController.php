@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Actions\Api\V1\Form\AddFormFieldAction;
+use App\Http\Actions\Api\V1\Form\AddFormOldKeyAction;
 use App\Http\Actions\Api\V1\Form\AddFormStatusAction;
 use App\Http\Actions\Api\V1\Form\DeleteFormFieldAction;
+use App\Http\Actions\Api\V1\Form\DeleteFormOldKeyAction;
 use App\Http\Actions\Api\V1\Form\DeleteFormStatusAction;
 use App\Http\Actions\Api\V1\Form\GetFormAction;
 use App\Http\Actions\Api\V1\Form\GetFormsAction;
@@ -13,6 +15,7 @@ use App\Http\Actions\Api\V1\Form\ReorderFormFieldsAction;
 use App\Http\Actions\Api\V1\Form\SubmitFormAction;
 use App\Http\Actions\Api\V1\Form\UpdateFormAction;
 use App\Http\Actions\Api\V1\Form\UpdateFormFieldAction;
+use App\Http\Actions\Api\V1\Form\UpdateFormOldKeyAction;
 use App\Http\Actions\Api\V1\Form\UpdateFormStatusAction;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -78,5 +81,20 @@ class FormController extends Controller
     public function deleteStatus(int $statusId, DeleteFormStatusAction $action): JsonResponse
     {
         return $action->handle($statusId);
+    }
+
+    public function addOldKey(Request $request, int $formId, AddFormOldKeyAction $action): JsonResponse
+    {
+        return $action->handle($request, $formId);
+    }
+
+    public function updateOldKey(Request $request, int $id, UpdateFormOldKeyAction $action): JsonResponse
+    {
+        return $action->handle($request, $id);
+    }
+
+    public function deleteOldKey(int $id, DeleteFormOldKeyAction $action): JsonResponse
+    {
+        return $action->handle($id);
     }
 }

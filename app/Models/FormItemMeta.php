@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FormItemMeta extends Model
 {
-    protected $fillable = ['meta_value', 'field_id', 'item_id'];
+    protected $fillable = ['field_key', 'meta_value', 'field_id', 'item_id'];
 
     public function field(): BelongsTo
     {

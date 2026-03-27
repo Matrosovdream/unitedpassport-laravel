@@ -21,6 +21,10 @@ Route::post('/forms/{formId}/statuses', [FormController::class, 'addStatus']);
 Route::put('/form-statuses/{statusId}', [FormController::class, 'updateStatus']);
 Route::delete('/form-statuses/{statusId}', [FormController::class, 'deleteStatus']);
 
+Route::post('/forms/{formId}/old-keys', [FormController::class, 'addOldKey']);
+Route::put('/form-old-keys/{id}', [FormController::class, 'updateOldKey']);
+Route::delete('/form-old-keys/{id}', [FormController::class, 'deleteOldKey']);
+
 Route::get('/form-entries', [FormEntryController::class, 'index']);
 Route::get('/form-entries/{id}', [FormEntryController::class, 'show']);
 Route::put('/form-entries/{id}', [FormEntryController::class, 'update']);

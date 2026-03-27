@@ -39,6 +39,7 @@ class FormService
             ->map(fn($field) => collect($field)->except('Model'));
 
         $form['statuses'] = $form['Model']->statuses()->orderBy('id')->get();
+        $form['old_keys'] = $form['Model']->oldKeys()->orderBy('id')->get();
 
         return $form;
     }

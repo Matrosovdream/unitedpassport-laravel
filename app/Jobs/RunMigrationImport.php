@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 
 class RunMigrationImport implements ShouldQueue
@@ -45,8 +46,15 @@ class RunMigrationImport implements ShouldQueue
             MigrationConfig::setPassword($job->source_password);
         }
 
+        // Clear cached code so the queue worker always uses the latest
+        Artisan::call('optimize:clear');
+
         $migratorClass = $tables[$job->table_key]['migrator'];
         $migrator = new $migratorClass();
+        $migrator->setPerPage($job->per_page ?? 100);
+
+        $maxLoad = $job->max_load ?? 1000;
+        $totalLoaded = 0;
 
         $job->update([
             'status' => 'running',
@@ -72,8 +80,12 @@ class RunMigrationImport implements ShouldQueue
                     'errors' => array_slice($allErrors, -50), // keep last 50 errors
                 ]);
 
-                // Refresh model to get updated counters
+                // Refresh model to get updated counters and check if stopped
                 $job->refresh();
+
+                if ($job->status === 'failed') {
+                    break;
+                }
 
                 // Stop if no more pages
                 $totalPages = $result['total_pages'] ?? null;
@@ -84,6 +96,11 @@ class RunMigrationImport implements ShouldQueue
                 // Stop if the page returned no rows (no pagination info from source)
                 $rowCount = ($result['imported'] ?? 0) + ($result['updated'] ?? 0) + ($result['skipped'] ?? 0);
                 if ($rowCount === 0) {
+                    break;
+                }
+
+                $totalLoaded += $rowCount;
+                if ($totalLoaded >= $maxLoad) {
                     break;
                 }
 

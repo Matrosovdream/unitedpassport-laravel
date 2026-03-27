@@ -32,6 +32,9 @@ const pages = ref([{ num: 1, title: 'Page 1' }]);
 const statuses = ref([]);
 const newStatus = ref({ code: '', value: '', description: '', color: '#2563eb' });
 const savingStatusId = ref(null);
+const oldKeys = ref([]);
+const newOldKey = ref({ old_field_id: '', new_field_code: '' });
+const savingOldKeyId = ref(null);
 
 // Inline editing
 const expandedFieldId = ref(null);
@@ -83,6 +86,7 @@ async function loadForm() {
         };
         fields.value = data.form.fields || [];
         statuses.value = data.form.statuses || [];
+        oldKeys.value = data.form.old_keys || [];
         loadPageTitles(data.form.options);
         rebuildPages();
     } catch (e) {
@@ -415,6 +419,66 @@ async function deleteStatus(statusId) {
         toast.add({ severity: 'error', summary: e.response?.data?.message || 'Failed to delete', life: 5000 });
     }
 }
+
+// ── Old Fields tab ──
+async function addOldKey() {
+    if (!newOldKey.value.old_field_id || !newOldKey.value.new_field_code) {
+        toast.add({ severity: 'warn', summary: 'Old Field ID and New Field Code are required', life: 3000 });
+        return;
+    }
+    try {
+        const { data } = await window.axios.post(`/forms/${formId.value}/old-keys`, newOldKey.value);
+        oldKeys.value.push(data.old_key);
+        newOldKey.value = { old_field_id: '', new_field_code: '' };
+        toast.add({ severity: 'success', summary: 'Old key added', life: 3000 });
+    } catch (e) {
+        toast.add({ severity: 'error', summary: e.response?.data?.message || 'Failed to add', life: 5000 });
+    }
+}
+
+let oldKeySaveTimer = null;
+function onOldKeyInput(key) {
+    clearTimeout(oldKeySaveTimer);
+    oldKeySaveTimer = setTimeout(() => saveOldKey(key), 600);
+}
+
+async function saveOldKey(key) {
+    savingOldKeyId.value = key.id;
+    try {
+        const { data } = await window.axios.put(`/form-old-keys/${key.id}`, {
+            old_field_id: key.old_field_id,
+            new_field_code: key.new_field_code,
+        });
+        const idx = oldKeys.value.findIndex(k => k.id === key.id);
+        if (idx !== -1) oldKeys.value[idx] = { ...oldKeys.value[idx], ...data.old_key };
+    } catch (e) {
+        toast.add({ severity: 'error', summary: 'Failed to save', life: 3000 });
+    } finally {
+        savingOldKeyId.value = null;
+    }
+}
+
+function confirmDeleteOldKey(key) {
+    confirm.require({
+        message: `Delete mapping "${key.old_field_id} → ${key.new_field_code}"?`,
+        header: 'Delete Old Key',
+        icon: 'pi pi-trash',
+        rejectLabel: 'Cancel',
+        acceptLabel: 'Delete',
+        acceptClass: 'p-button-danger',
+        accept: () => deleteOldKey(key.id),
+    });
+}
+
+async function deleteOldKey(id) {
+    try {
+        await window.axios.delete(`/form-old-keys/${id}`);
+        oldKeys.value = oldKeys.value.filter(k => k.id !== id);
+        toast.add({ severity: 'success', summary: 'Old key deleted', life: 3000 });
+    } catch (e) {
+        toast.add({ severity: 'error', summary: e.response?.data?.message || 'Failed to delete', life: 5000 });
+    }
+}
 </script>
 
 <template>
@@ -432,6 +496,7 @@ async function deleteStatus(statusId) {
                 <Tab value="general">General</Tab>
                 <Tab value="edit">Edit</Tab>
                 <Tab value="statuses">Statuses</Tab>
+                <Tab value="old-fields">Old Fields</Tab>
             </TabList>
             <TabPanels>
                 <!-- General Tab -->
@@ -673,6 +738,44 @@ async function deleteStatus(statusId) {
                                 </div>
                                 <i v-if="savingStatusId === status.id" class="pi pi-spin pi-spinner text-xs text-primary-500"></i>
                                 <Button icon="pi pi-trash" text rounded size="small" severity="danger" class="opacity-0 group-hover:opacity-100 transition-opacity" @click="confirmDeleteStatus(status)" />
+                            </div>
+                        </div>
+                    </div>
+                </TabPanel>
+
+                <!-- Old Fields Tab -->
+                <TabPanel value="old-fields">
+                    <div class="pt-4 max-w-3xl">
+                        <!-- Add new mapping -->
+                        <div class="flex gap-2 items-end mb-6">
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Old Field ID</label>
+                                <InputText v-model="newOldKey.old_field_id" placeholder="e.g. 7" size="small" />
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-xs font-medium mb-1">New Field Code</label>
+                                <InputText v-model="newOldKey.new_field_code" placeholder="e.g. status" size="small" class="w-full" />
+                            </div>
+                            <Button label="Add" icon="pi pi-plus" size="small" @click="addOldKey" />
+                        </div>
+
+                        <!-- Mappings list -->
+                        <div v-if="oldKeys.length === 0" class="text-surface-400 text-sm py-4">
+                            No field mappings defined for this form.
+                        </div>
+                        <div v-else class="flex flex-col gap-2">
+                            <div
+                                v-for="key in oldKeys"
+                                :key="key.id"
+                                class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 group"
+                            >
+                                <div class="flex-1 grid grid-cols-3 gap-2 items-center">
+                                    <InputText v-model="key.old_field_id" size="small" placeholder="Old Field ID" @input="onOldKeyInput(key)" />
+                                    <span class="text-center text-surface-400 text-sm">→</span>
+                                    <InputText v-model="key.new_field_code" size="small" placeholder="New Field Code" @input="onOldKeyInput(key)" />
+                                </div>
+                                <i v-if="savingOldKeyId === key.id" class="pi pi-spin pi-spinner text-xs text-primary-500"></i>
+                                <Button icon="pi pi-trash" text rounded size="small" severity="danger" class="opacity-0 group-hover:opacity-100 transition-opacity" @click="confirmDeleteOldKey(key)" />
                             </div>
                         </div>
                     </div>

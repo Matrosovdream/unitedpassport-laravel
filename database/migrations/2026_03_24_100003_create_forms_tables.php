@@ -75,6 +75,7 @@ return new class extends Migration
 
         Schema::create('form_item_metas', function (Blueprint $table) {
             $table->id();
+            $table->string('field_key', 100)->nullable()->index();
             $table->longText('meta_value')->nullable();
             $table->unsignedBigInteger('field_id')->index();
             $table->unsignedBigInteger('item_id')->index();
@@ -84,6 +85,16 @@ return new class extends Migration
             $table->foreign('item_id')->references('id')->on('form_items')->cascadeOnDelete();
 
             $table->index(['field_id', 'item_id']);
+        });
+
+        Schema::create('form_old_keys', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('form_id')->constrained('forms')->cascadeOnDelete();
+            $table->unsignedBigInteger('old_field_id')->index();
+            $table->string('new_field_code', 100);
+            $table->timestamps();
+
+            $table->unique(['form_id', 'old_field_id']);
         });
 
         Schema::create('form_settings', function (Blueprint $table) {
@@ -100,6 +111,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('form_settings');
+        Schema::dropIfExists('form_old_keys');
         Schema::dropIfExists('form_item_metas');
         Schema::dropIfExists('form_items');
         Schema::dropIfExists('form_statuses');

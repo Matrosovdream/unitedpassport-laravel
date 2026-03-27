@@ -13,6 +13,16 @@
                 <InputText v-model="sourcePassword" class="w-full" placeholder="pass123" />
             </div>
         </div>
+        <div class="flex flex-col md:flex-row gap-4 mt-4">
+            <div style="width: 200px">
+                <label class="block text-sm font-medium mb-1">Per Page</label>
+                <InputText v-model.number="perPage" class="w-full" type="number" />
+            </div>
+            <div style="width: 200px">
+                <label class="block text-sm font-medium mb-1">Max Load Per Run</label>
+                <InputText v-model.number="maxLoad" class="w-full" type="number" />
+            </div>
+        </div>
     </div>
 
     <div class="card">
@@ -30,7 +40,15 @@
                         @click="startImport(data.key)"
                         size="small"
                     />
-                    <Tag v-else severity="info" icon="pi pi-spin pi-spinner" value="Running..." />
+                    <Button
+                        v-else
+                        label="Stop"
+                        icon="pi pi-stop"
+                        severity="danger"
+                        size="small"
+                        :disabled="stopping === data.key"
+                        @click="stopImport(data.key)"
+                    />
                 </template>
             </Column>
             <Column header="Progress" style="min-width: 350px">
@@ -85,8 +103,11 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 const tables = ref([]);
 const loadingTables = ref(true);
 const starting = ref(null);
+const stopping = ref(null);
 const sourceUrl = ref('');
 const sourcePassword = ref('');
+const perPage = ref(100);
+const maxLoad = ref(1000);
 const jobs = ref([]);
 let pollTimer = null;
 
@@ -159,6 +180,18 @@ function stopPolling() {
     }
 }
 
+async function stopImport(tableKey) {
+    stopping.value = tableKey;
+    try {
+        await window.axios.post('/migration/stop', { table: tableKey });
+        await fetchStatus();
+    } catch (e) {
+        alert(e.response?.data?.message || 'Failed to stop import');
+    } finally {
+        stopping.value = null;
+    }
+}
+
 async function startImport(tableKey) {
     starting.value = tableKey;
 
@@ -167,6 +200,8 @@ async function startImport(tableKey) {
             table: tableKey,
             source_url: sourceUrl.value,
             source_password: sourcePassword.value,
+            per_page: perPage.value,
+            max_load: maxLoad.value,
         });
         await fetchStatus();
         // Ensure fast polling while active

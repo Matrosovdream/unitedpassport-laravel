@@ -16,6 +16,8 @@ class ImportAction
             'table' => 'required|string',
             'source_url' => 'nullable|string',
             'source_password' => 'nullable|string',
+            'per_page' => 'nullable|integer|min:1|max:1000',
+            'max_load' => 'nullable|integer|min:1',
         ]);
 
         $tableKey = $request->input('table');
@@ -38,6 +40,8 @@ class ImportAction
             'status' => 'pending',
             'source_url' => $request->input('source_url') ?: MigrationConfig::getBaseUrl(),
             'source_password' => $request->input('source_password') ?: MigrationConfig::getPassword(),
+            'per_page' => $request->input('per_page', 100),
+            'max_load' => $request->input('max_load', 1000),
         ]);
 
         RunMigrationImport::dispatch($job->id)->onQueue('default');

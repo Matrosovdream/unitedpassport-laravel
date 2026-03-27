@@ -54,15 +54,9 @@ class MigrationConfig
             ],
             'frm_items' => [
                 'order' => 4,
-                'label' => 'Form Items',
+                'label' => 'Form Items & Metas',
                 'local_table' => 'form_items',
                 'migrator' => FormItemsMigrator::class,
-            ],
-            'frm_item_metas' => [
-                'order' => 5,
-                'label' => 'Form Item Metas',
-                'local_table' => 'form_item_metas',
-                'migrator' => FormItemMetasMigrator::class,
             ],
             'frm_payments' => [
                 'order' => 6,

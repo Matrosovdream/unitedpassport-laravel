@@ -83,5 +83,15 @@ class FormFieldsMigrator extends AbstractMigrator
                     ->update(['page_num' => $page]);
             }
         }
+
+        // Rename field_key based on form_old_keys mappings
+        $oldKeys = DB::table('form_old_keys')->get();
+
+        foreach ($oldKeys as $mapping) {
+            DB::table('form_fields')
+                ->where('id', $mapping->old_field_id)
+                ->where('form_id', $mapping->form_id)
+                ->update(['field_key' => $mapping->new_field_code]);
+        }
     }
 }

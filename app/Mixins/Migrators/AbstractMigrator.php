@@ -7,6 +7,14 @@ use Illuminate\Support\Facades\Log;
 
 abstract class AbstractMigrator
 {
+    protected int $perPage = 100;
+
+    public function setPerPage(int $perPage): static
+    {
+        $this->perPage = $perPage;
+        return $this;
+    }
+
     /**
      * Fetch rows from the source WP site.
      */
@@ -18,6 +26,7 @@ abstract class AbstractMigrator
                 'password' => MigrationConfig::getPassword(),
                 'table' => $table,
                 'page' => $page,
+                'per_page' => $this->perPage,
             ]);
 
         $response = Http::timeout(60)->get($url);

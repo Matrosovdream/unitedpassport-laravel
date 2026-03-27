@@ -21,6 +21,8 @@ return new class extends Migration
             $table->json('errors')->nullable();
             $table->string('source_url', 500)->nullable();
             $table->string('source_password', 255)->nullable();
+            $table->integer('per_page')->default(100);
+            $table->integer('max_load')->default(1000);
             $table->timestamp('started_at')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
