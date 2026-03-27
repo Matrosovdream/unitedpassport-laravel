@@ -41,16 +41,27 @@ return new class extends Migration
             $table->foreign('form_id')->references('id')->on('forms')->cascadeOnDelete();
         });
 
+        Schema::create('form_statuses', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('form_id')->constrained('forms')->cascadeOnDelete();
+            $table->string('code', 100)->index();
+            $table->string('value', 255);
+            $table->string('description', 255)->nullable();
+            $table->string('color', 50)->nullable();
+            $table->timestamps();
+
+            $table->unique(['form_id', 'code']);
+        });
+
         Schema::create('form_items', function (Blueprint $table) {
             $table->id();
             $table->string('item_key', 100)->nullable()->unique();
             $table->string('name', 255)->nullable();
-            $table->text('description')->nullable();
+            $table->text('browser_info')->nullable();
             $table->text('ip')->nullable();
             $table->unsignedBigInteger('form_id')->nullable()->index();
-            $table->unsignedBigInteger('post_id')->nullable()->index();
             $table->unsignedBigInteger('user_id')->nullable()->index();
-            $table->unsignedBigInteger('parent_item_id')->default(0)->index();
+            $table->foreignId('status_id')->nullable()->constrained('form_statuses')->nullOnDelete();
             $table->boolean('is_draft')->default(false);
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
@@ -91,6 +102,7 @@ return new class extends Migration
         Schema::dropIfExists('form_settings');
         Schema::dropIfExists('form_item_metas');
         Schema::dropIfExists('form_items');
+        Schema::dropIfExists('form_statuses');
         Schema::dropIfExists('form_fields');
         Schema::dropIfExists('forms');
     }

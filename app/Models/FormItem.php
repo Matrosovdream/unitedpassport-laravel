@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class FormItem extends Model
 {
     protected $fillable = [
-        'item_key', 'name', 'description', 'ip', 'form_id',
-        'post_id', 'user_id', 'parent_item_id', 'is_draft', 'updated_by',
+        'item_key', 'name', 'browser_info', 'ip', 'form_id',
+        'user_id', 'status_id', 'is_draft', 'updated_by',
     ];
 
     protected function casts(): array
